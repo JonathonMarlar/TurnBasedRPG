@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "item.h"
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
@@ -19,6 +20,14 @@ int main(int argc, char** argv)
 
 	// make a player
 	Entity player(n, 200);
+
+	// make a player inventory
+	vector<Item> inventory;
+
+	Item potion("Potion", HEAL, 100, 3);
+	inventory.push_back(potion);
+	Item thunder("Thunder Flask", DEAL_DAMAGE, 10, 1);
+	inventory.push_back(thunder);
 
 	// make a list of enemies
 	vector<Entity> enemies;
@@ -57,6 +66,7 @@ int main(int argc, char** argv)
 		char choice;
 		cout << "What will " << player.get_name() << " do?" << endl;
 		cout << "A -- Attack" << endl;
+		cout << "I -- Use Item" << endl;
 		cout << "E -- Escape" << endl;
 		cin >> choice;
 
@@ -85,6 +95,58 @@ int main(int argc, char** argv)
 					cout << player.get_name() << " defeated " << enemies[target].get_name() << "!" << endl;
 					enemies.erase(enemies.begin() + target);
 				}
+			} break;
+			case 'I':
+			{
+				// pick an item
+				if (inventory.size() > 0)
+				{
+					int choice;
+					cout << "Pick an item from your inventory: " << endl;
+					for (int i = 0; i < inventory.size(); i++)
+					{
+						cout << i << ": " << inventory[i].get_name() << " x " << inventory[i].get_amount() << endl;
+					}
+					cout << ": ";
+					cin >> choice;
+
+					// use it
+					system("clear");
+					if (inventory[choice].get_effect() == HEAL)
+					{
+						cout << player.get_name() << " used a " << inventory[choice].get_name() << "! Healed for " << inventory[choice].get_value() << " points!" << endl;
+						int n = player.get_hp() + inventory[choice].get_value();
+						player.set_hp(n);
+
+					}
+					else if (inventory[choice].get_effect() == DEAL_DAMAGE)
+					{
+						cout << player.get_name() << " used a " << inventory[choice].get_name() << "! Thunder eroded the sky!" << endl;
+
+						// deal damage to enemies
+						for (int i = 0; i < enemies.size(); i++)
+						{
+							cout << "Dealt " << inventory[choice].get_value() << " damage to " << enemies[i].get_name() << "!" << endl;
+							int enemy_hp = enemies[i].get_hp() - inventory[choice].get_value();
+							enemies[i].set_hp(enemy_hp);
+
+							// delete enemies from the list if they are defeated
+							if (enemies[i].get_hp() <= 0)
+							{
+								cout << player.get_name() << " defeated " << enemies[i].get_name() << "!" << endl;
+								enemies.erase(enemies.begin() + i);
+							}
+						}
+					}
+
+					// remove it from inventory if we don't have any more
+					inventory[choice].use_item();
+					if (inventory[choice].get_amount() == 0)
+							inventory.erase(inventory.begin() + choice);
+				}
+				else
+					cout << player.get_name() << " had no items and wasted time!" << endl;
+				
 			} break;
 			case 'E':
 			{
